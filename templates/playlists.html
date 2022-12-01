@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Your Life in Tunes{% endblock %}
+{% block header %}Playlist{% endblock %}
+{% block content %}
+<table>
+{% for playlist in playlists %}
+    <tr>
+        <td>
+<a href = {{ playlist.0 }}> {{ playlist.1 }}</a>
+        </td>
+        </tr>
+{% endfor %}
+</table>
+<!--<a href="/me" class="btn btn-secondary">I don't have Spotify :( but I still want to see!</a>-->
+{% endblock %}
