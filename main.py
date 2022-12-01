@@ -70,7 +70,7 @@ CLIENT_SECRET = os.environ.get("SPOTIPY_CLIENT_SECRET")
 if debug:
     REDIRECT_URI = 'http://127.0.0.1:5000/callback'
 else:
-    REDIRECT_URI = 'https://www.yalewrappd.com/callback'
+    REDIRECT_URI = 'https://fizzl.herokuapp.com/callback'
 
 # Spotify API endpoints
 AUTH_URL = 'https://accounts.spotify.com/authorize'
