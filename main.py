@@ -58,10 +58,12 @@ import json
 from oauthlib.oauth2 import WebApplicationClient
 import random
 import spotipy.util as util
+import redis
 
 
 
-#r = redis.from_url(os.environ.get("REDIS_URL"))
+
+r = redis.from_url(os.environ.get("REDIS_URL"))
 
 # Client info
 CLIENT_ID = os.environ.get("SPOTIPY_CLIENT_ID")
@@ -219,12 +221,56 @@ def playlists():
     if session['tokens'].get('access_token'):
         sp = spotipy.Spotify(auth=session['tokens'].get('access_token'))  # create spotify session
         playlists = sp.user_playlists(user=sp.me()['id'])
-        print(playlists)
+        playlists1 = [playlist['name'] for playlist in playlists['items']]
+
+        print(playlists1)
         playlists_recent = playlists['items'][:20]
         p_output = []
         for i, playlist in enumerate(playlists_recent):
                 p_output.append([playlist['id'], playlist['name']])
         return render_template("playlists.html", playlists=p_output)
+#todo maybe cut getting all info and just get id, also save title
+@app.route('/playlists/<pid>')
+def voting(pid):
+    if r.get(pid) is None:
+        # Iterate through all songs in the playlist and initialize a dictionary with track ID as the key and 0 as the value
+        sp = spotipy.Spotify(auth=session['tokens'].get('access_token'))
+        playlist = sp.playlist(pid)
+        p_title = playlist['name']
+        songs = playlist['tracks']['items']
+        song_list = []
+        for song in songs:
+            track = song['track']
+            track['score'] = 0
+            song_list.append(track)
+        r.set(pid, json.dumps(song_list))
+
+    else:
+        sp = spotipy.Spotify(auth=session['tokens'].get('access_token'))
+        playlist = sp.playlist(pid)
+        p_title = playlist['name']
+        song_list = json.loads(r.get(pid))
+    #for song in song_list:
+        #print(song['name'], song['score'])
+    return (render_template("voting.html", tracks=song_list, pid=pid, title=p_title))
+
+
+@app.route('/playlists/<pid>/<trackId>/vote', methods=['POST'])
+def vote_for_track(pid, trackId):
+  # Update the track's score in the Redis database
+  playlist = json.loads(r.get(pid))
+  for track in playlist:
+      if track["id"] == trackId:
+          track["score"] += 1
+          r.set(pid, json.dumps(playlist))
+          return '', 204
+ # r.incr('tracks:' + trackId + ':score')
+
+
+@app.route('/flush')
+def flush():
+    r.flushdb()
+    return "flushed"
 
 
 

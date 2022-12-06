@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}{% endblock %}
+{% block header %} {{title}} {% endblock %}
+{% block content %}
+
+<style>
+  li {
+    display: flex;
+    align-items: center;
+  }
+  iframe {
+    margin-right: 10px;
+  }
+  button {
+    padding: 10px 20px;
+    background-color: #1DB954;
+    border-radius: 10px;
+    color: white;
+    font-weight: bold;
+  }
+  span {
+    margin-left: 10px;
+    font-weight: bold;
+  }
+</style>
+
+<ul style="list-style: none;">
+  {% for track in tracks %}
+    <li>
+      <!-- Use the Spotify Embed code to embed the track in the page -->
+      <iframe src="https://open.spotify.com/embed/track/{{ track.id }}" width="200" height="80" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>
+      <button type="button" onclick="voteForTrack('{{ pid }}', '{{ track.id }}')">Vote</button>
+      <span id="track-{{ track.id }}-score">{{ track.score }}</span>
+    </li>
+  {% endfor %}
+</ul>
+
+<script>
+  function voteForTrack(pid, trackId) {
+    // Send a POST request to your Flask app to update the track's score
+    fetch('/playlists/' + pid + '/' + trackId + '/vote', {method: 'POST'})
+            .then(() => {
+        // Increment the track's score in the page
+        let scoreSpan = document.querySelector('#track-' + trackId + '-score');
+        scoreSpan.textContent = parseInt(scoreSpan.textContent) + 1;
+      });;
+  }
+</script>
+{% endblock %}
