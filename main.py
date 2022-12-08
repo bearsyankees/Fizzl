@@ -252,7 +252,7 @@ def voting(pid):
         song_list = json.loads(r.get(pid))
     #for song in song_list:
         #print(song['name'], song['score'])
-    return (render_template("voting.html", tracks=song_list, pid=pid, title=p_title))
+    return (render_template("voting.html", tracks=song_list, pid=pid, title=p_title, votesRemaining = 5))
 
 
 @app.route('/playlists/<pid>/<trackId>/vote', methods=['POST'])

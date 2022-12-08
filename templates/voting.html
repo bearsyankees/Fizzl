@@ -5,8 +5,12 @@
 
 <style>
   li {
-    display: flex;
+    display: inline-block;
     align-items: center;
+    width: 300px;
+    margin: 10px;
+
+
   }
   iframe {
     margin-right: 10px;
@@ -22,24 +26,53 @@
     margin-left: 10px;
     font-weight: bold;
   }
+  div.container {
+    height: 80px;
+
+    /* Use a flex layout for the div.container element */
+    display: flex;
+    justify-content: center;
+
+  }
+  div.container span {
+    font-size: 20px;
+    font-family: sans-serif;
+    color: blue;
+  }
 </style>
+
+<p>You have <span id="votes-remaining">{{votesRemaining}}</span> votes remaining.</p>
 
 <ul style="list-style: none;">
   {% for track in tracks %}
     <li>
       <!-- Use the Spotify Embed code to embed the track in the page -->
-      <iframe src="https://open.spotify.com/embed/track/{{ track.id }}" width="200" height="80" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>
-      <button type="button" onclick="voteForTrack('{{ pid }}', '{{ track.id }}')">Vote</button>
+      <div class="container" style="position: relative;">
+  <div style="position: absolute">
+          <iframe src="https://open.spotify.com/embed/track/{{ track.id }}" width="300" height="80" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>
+  </div>
+  {{track.name}} by {{track.artists[0].name}}
+</div>
+      <button type="button" onclick="voteForTrack('{{ pid }}', '{{ track.id }}', this)">Vote</button>
       <span id="track-{{ track.id }}-score">{{ track.score }}</span>
     </li>
   {% endfor %}
 </ul>
 
 <script>
-  function voteForTrack(pid, trackId) {
-    // Send a POST request to your Flask app to update the track's score
+  function voteForTrack(pid, trackId, button) {
+    let votesRemainingSpan = document.querySelector('#votes-remaining');
+    let votesRemaining = parseInt(votesRemainingSpan.textContent);
+    if (votesRemaining <= 0) {
+      // The user has no votes remaining, so do not allow them to vote
+      return;
+    }
+    // Send a POST request to the app to update the track's score
     fetch('/playlists/' + pid + '/' + trackId + '/vote', {method: 'POST'})
             .then(() => {
+        // Decrement the user's votes remaining
+              votesRemainingSpan.textContent = votesRemaining - 1;
+
         // Increment the track's score in the page
         let scoreSpan = document.querySelector('#track-' + trackId + '-score');
         scoreSpan.textContent = parseInt(scoreSpan.textContent) + 1;
